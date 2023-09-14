@@ -12,7 +12,11 @@ sap.ui.define([
 
         return Controller.extend("com.bosch.camera.controller.View1", {
             onInit: function () {
-
+                //Speech Recognition
+                var recognition = new window.webkitSpeechRecognition();
+			    recognition.continuous = true;
+			    recognition.lang = 'en-IN';
+			    this.recognition = recognition;
             },
             oTakePicture: function () {
                 var that = this;
@@ -76,6 +80,51 @@ sap.ui.define([
                         }
                     })
                 }
+            },
+            //Speech Recognition
+            onStartRecording: function () {
+                var final_transcript = '';
+                var that = this;
+                this.recognition.start();
+                MessageToast.show("Recording started");
+                this.recognition.onstart = function() {};
+                this.recognition.onresult = function(event) {
+                    
+                    var interim_transcript = '';
+    
+                    for (var i = event.resultIndex; i < event.results.length; ++i) {
+                        if (event.results[i].isFinal) {
+                            final_transcript += event.results[i][0].transcript;
+                        } else {
+                            interim_transcript += event.results[i][0].transcript;
+                            console.log(interim_transcript);
+                        }
+    
+                    }
+                    
+                    if (final_transcript != "") {
+                        that.submitValue(final_transcript);
+                        final_transcript = "";
+                    }
+                };
+            },
+            submitValue: function(final_transcript) {
+                var key = final_transcript.toLowerCase().trim();
+                console.log("Key:" + key);
+                this.getView().byId("idTextArea").setValue(key);
+                //this.recognition.stop();
+                /*switch (key) {
+                    case "TextArea1 recording":
+                        this.recognition.stop();
+                        break;
+                    case "TextArea2 recording":
+                        this.recognition.stop();
+                        break;
+                }*/
+            },
+            onStopRecording:function(){
+                this.recognition.stop();
             }
+                 
         });
     });
